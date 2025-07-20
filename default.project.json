@@ -1,10 +1,10 @@
 {
-    "name": "Lucide",
-    "tree": {
-        "$path": "lib",
+  "name": "Lucide",
+  "tree": {
+    "$path": "out",
 
-        "VersionInfo": {
-            "$path": "version-info.luau"
-        }
+    "VersionInfo": {
+      "$path": "version-info.luau"
     }
+  }
 }

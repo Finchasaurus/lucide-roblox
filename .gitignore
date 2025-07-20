@@ -7,3 +7,10 @@
 /wally.lock # Unused
 
 sourcemap.json
+
+/node_modules
+/out
+/include
+*.tsbuildinfo
+package-lock.json
+*.tgz

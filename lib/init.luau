@@ -1,70 +1,82 @@
 -- MIT License | Copyright (c) 2023 Latte Softworks <https://latte.to>
 
 export type Asset = {
-    IconName: string, -- "icon-name"
-    Id: number, -- 123456789
-    Url: string, -- "rbxassetid://123456789"
-    ImageRectSize: Vector2, -- Vector2.new(48, 48)
-    ImageRectOffset: Vector2, -- Vector2.new(648, 266)
+	IconName: string, -- "icon-name"
+	Id: number, -- 123456789
+	Url: string, -- "rbxassetid://123456789"
+	ImageRectSize: Vector2, -- Vector2.new(48, 48)
+	ImageRectOffset: Vector2, -- Vector2.new(648, 266)
 }
 
 local Icons = require(script.Icons)
-local VersionInfo = require(script.VersionInfo)
+local VersionInfo = require(script["version-info"])
 
 local Type = typeof or type
-local function CheckArgTypes(funcName: string, inputArgs: {any}, typeEntries: {[number]: {string}})
-    for ArgIndex, TypeEntryArray in typeEntries do
-        local ArgName = TypeEntryArray[1]
-        local ExpectedType = TypeEntryArray[2]
-        
-        local InputArg = inputArgs[ArgIndex]
-        local InputArgType = Type(InputArg)
+local function CheckArgTypes(funcName: string, inputArgs: { any }, typeEntries: { [number]: { string } })
+	for ArgIndex, TypeEntryArray in typeEntries do
+		local ArgName = TypeEntryArray[1]
+		local ExpectedType = TypeEntryArray[2]
 
-        if InputArgType ~= ExpectedType then
-            error(funcName .. ": Argument " .. ArgIndex .. " (" .. ArgName .. "): expected type `" .. ExpectedType .. "`, got `" .. InputArgType .. "`", 3)
-        end
-    end
+		local InputArg = inputArgs[ArgIndex]
+		local InputArgType = Type(InputArg)
+
+		if InputArgType ~= ExpectedType then
+			error(
+				funcName
+					.. ": Argument "
+					.. ArgIndex
+					.. " ("
+					.. ArgName
+					.. "): expected type `"
+					.. ExpectedType
+					.. "`, got `"
+					.. InputArgType
+					.. "`",
+				3
+			)
+		end
+	end
 end
 
 local function TrimIconIdentifier(inputIconIdentifier: string): string
-    return string.match(string.lower(inputIconIdentifier), "^%s*(.*)%s*$") :: string
+	return string.match(string.lower(inputIconIdentifier), "^%s*(.*)%s*$") :: string
 end
 
-local function ApplyToInstance(object: Instance, properties: {[string]: any}): Instance
-    if properties then
-        for Property, Value in properties do
-            if Property ~= "Parent" then
-                object[Property] = Value
-            end
-        end
+local function ApplyToInstance(object: Instance, properties: { [string]: any }): Instance
+	if properties then
+		for Property, Value in properties do
+			if Property ~= "Parent" then
+				object[Property] = Value
+			end
+		end
 
-        if properties.Parent then
-            object.Parent = properties.Parent
-        end
-    end
+		if properties.Parent then
+			object.Parent = properties.Parent
+		end
+	end
 
-    return object
+	return object
 end
 
 -- See /version-info.luau
 local Lucide = {
-    PackageVersion = VersionInfo.PackageVersion,
-    LucideVersion = VersionInfo.LucideVersion,
+	PackageVersion = VersionInfo.PackageVersion,
+	LucideVersion = VersionInfo.LucideVersion,
 }
 
 -- Add all icon names to an array
 do
-    local IconNames: {string} = {}
-    local _, FirstIconIndex = next(Icons) -- If it's actually `{}`, we're in trouble..
-    FirstIconIndex = FirstIconIndex or {}
+	local IconNames: { string } = {}
+	local _, FirstIconIndex = next(Icons) -- If it's actually `{}`, we're in trouble..
+	FirstIconIndex = FirstIconIndex or {}
 
-    for IconName in FirstIconIndex do
-        table.insert(IconNames, IconName)
-    end
+	for IconName in FirstIconIndex do
+		table.insert(IconNames, IconName)
+	end
 
-    table.sort(IconNames)
-    table.freeze(IconNames)
-    Lucide.IconNames = IconNames
+	table.sort(IconNames)
+	table.freeze(IconNames)
+	Lucide.IconNames = IconNames
 end
 
 --[[
@@ -86,53 +98,60 @@ end
     ```
 ]]
 function Lucide.GetAsset(iconName: string, iconSize: number?): Asset
-    local IconSize = if iconSize == nil then 256 else iconSize
+	local IconSize = if iconSize == nil then 256 else iconSize
 
-    CheckArgTypes("Lucide.GetAsset", {iconName, IconSize}, {
-        [1] = {"iconName", "string"},
-        [2] = {"iconSize", "number"},
-    })
+	CheckArgTypes("Lucide.GetAsset", { iconName, IconSize }, {
+		[1] = { "iconName", "string" },
+		[2] = { "iconSize", "number" },
+	})
 
-    local IconName = TrimIconIdentifier(iconName)
+	local IconName = TrimIconIdentifier(iconName)
 
-    -- If reading directly from a UI obj w/ a negative size..?
-    if IconSize < 0 then
-        IconSize = -IconSize
-    end
+	-- If reading directly from a UI obj w/ a negative size..?
+	if IconSize < 0 then
+		IconSize = -IconSize
+	end
 
-    local RealSizeIndex = if IconSize <= 48 then "48px" else "256px"
-    local IconIndexDict = Icons[RealSizeIndex]
+	local RealSizeIndex = if IconSize <= 48 then "48px" else "256px"
+	local IconIndexDict = Icons[RealSizeIndex]
 
-    if not IconIndexDict then
-        error("Lucide.GetAsset: Internal error: Failed to find icon index for specified size")
-    end
+	if not IconIndexDict then
+		error("Lucide.GetAsset: Internal error: Failed to find icon index for specified size")
+	end
 
-    local RawAsset = IconIndexDict[IconName]
-    if not RawAsset then
-        error("Lucide.GetAsset: Failed to find icon by the name of \"" .. IconName .. "\" (@" .. RealSizeIndex .. "), perhaps a spelling mistake?", 2)
-    end
+	local RawAsset = IconIndexDict[IconName]
+	if not RawAsset then
+		error(
+			'Lucide.GetAsset: Failed to find icon by the name of "'
+				.. IconName
+				.. '" (@'
+				.. RealSizeIndex
+				.. "), perhaps a spelling mistake?",
+			2
+		)
+	end
 
-    local Id = RawAsset[1]
-    local RawImageRectSize = RawAsset[2]
-    local RawImageRectOffset = RawAsset[3]
+	local Id = RawAsset[1]
+	local RawImageRectSize = RawAsset[2]
+	local RawImageRectOffset = RawAsset[3]
 
-    if type(Id) ~= "number" or type(RawImageRectSize) ~= "table" or type(RawImageRectOffset) ~= "table" then
-        error("Lucide.GetAsset: Internal error: Invalid auto-generated asset entry")
-    end
+	if type(Id) ~= "number" or type(RawImageRectSize) ~= "table" or type(RawImageRectOffset) ~= "table" then
+		error("Lucide.GetAsset: Internal error: Invalid auto-generated asset entry")
+	end
 
-    local Url = "rbxassetid://" .. Id
-    local ImageRectSize = Vector2.new(RawImageRectSize[1], RawImageRectSize[2])
-    local ImageRectOffset = Vector2.new(RawImageRectOffset[1], RawImageRectOffset[2])
+	local Url = "rbxassetid://" .. Id
+	local ImageRectSize = Vector2.new(RawImageRectSize[1], RawImageRectSize[2])
+	local ImageRectOffset = Vector2.new(RawImageRectOffset[1], RawImageRectOffset[2])
 
-    local Asset: Asset = {
-        IconName = IconName,
-        Id = Id,
-        Url = Url,
-        ImageRectSize = ImageRectSize,
-        ImageRectOffset = ImageRectOffset,
-    }
+	local Asset: Asset = {
+		IconName = IconName,
+		Id = Id,
+		Url = Url,
+		ImageRectSize = ImageRectSize,
+		ImageRectOffset = ImageRectOffset,
+	}
 
-    return Asset
+	return Asset
 end
 
 --[[
@@ -150,24 +169,24 @@ end
     end
     ```
 ]]
-function Lucide.GetAllAssets(inputSize: number?): {Asset}
-    local InputSize = if inputSize == nil then 256 else inputSize
+function Lucide.GetAllAssets(inputSize: number?): { Asset }
+	local InputSize = if inputSize == nil then 256 else inputSize
 
-    CheckArgTypes("Lucide.GetAllAssets", {InputSize}, {
-        [1] = {"inputSize", "number"},
-    })
+	CheckArgTypes("Lucide.GetAllAssets", { InputSize }, {
+		[1] = { "inputSize", "number" },
+	})
 
-    local Assets = {}
+	local Assets = {}
 
-    for _, IconName in Lucide.IconNames do
-        local Asset = Lucide.GetAsset(IconName, InputSize)
-        if Asset then
-            table.insert(Assets, Asset)
-        end
-    end
+	for _, IconName in Lucide.IconNames do
+		local Asset = Lucide.GetAsset(IconName, InputSize)
+		if Asset then
+			table.insert(Assets, Asset)
+		end
+	end
 
-    -- `Lucide.IconNames` is already pre-sorted
-    return Assets
+	-- `Lucide.IconNames` is already pre-sorted
+	return Assets
 end
 
 --[[
@@ -197,38 +216,38 @@ end
     ScreenGui.Parent = PlayerGui
     ```
 ]]
-function Lucide.ImageLabel(iconName: string, imageSize: number?, propertyOverrides: {[string]: any}?): ImageLabel
-    local ImageSize = if imageSize == nil then 256 else imageSize
-    local PropertyOverrides = if propertyOverrides == nil then {} else propertyOverrides
+function Lucide.ImageLabel(iconName: string, imageSize: number?, propertyOverrides: { [string]: any }?): ImageLabel
+	local ImageSize = if imageSize == nil then 256 else imageSize
+	local PropertyOverrides = if propertyOverrides == nil then {} else propertyOverrides
 
-    CheckArgTypes("Lucide.ImageLabel", {iconName, imageSize, propertyOverrides}, {
-        [1] = {"iconName", "string"},
-        [2] = {"imageSize", "number"},
-        [3] = {"propertyOverrides", "table"}
-    })
+	CheckArgTypes("Lucide.ImageLabel", { iconName, imageSize, propertyOverrides }, {
+		[1] = { "iconName", "string" },
+		[2] = { "imageSize", "number" },
+		[3] = { "propertyOverrides", "table" },
+	})
 
-    local Asset = Lucide.GetAsset(iconName, ImageSize)
+	local Asset = Lucide.GetAsset(iconName, ImageSize)
 
-    local ImageLabel = ApplyToInstance(Instance.new("ImageLabel"), {
-        Name = Asset.IconName,
+	local ImageLabel = ApplyToInstance(Instance.new("ImageLabel"), {
+		Name = Asset.IconName,
 
-        Size = UDim2.fromOffset(ImageSize, ImageSize),
+		Size = UDim2.fromOffset(ImageSize, ImageSize),
 
-        BackgroundColor3 = Color3.new(0, 0, 0),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
+		BackgroundColor3 = Color3.new(0, 0, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
 
-        Image = Asset.Url,
-        ImageRectSize = Asset.ImageRectSize,
-        ImageRectOffset = Asset.ImageRectOffset,
-        ImageColor3 = Color3.new(1, 1, 1), -- #FFFFFF
-        ScaleType = Enum.ScaleType.Fit,
-    })
+		Image = Asset.Url,
+		ImageRectSize = Asset.ImageRectSize,
+		ImageRectOffset = Asset.ImageRectOffset,
+		ImageColor3 = Color3.new(1, 1, 1), -- #FFFFFF
+		ScaleType = Enum.ScaleType.Fit,
+	})
 
-    -- Apply any provided overrides
-    ApplyToInstance(ImageLabel, PropertyOverrides)
+	-- Apply any provided overrides
+	ApplyToInstance(ImageLabel, PropertyOverrides)
 
-    return ImageLabel
+	return ImageLabel
 end
 
 table.freeze(Lucide)
